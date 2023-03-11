@@ -3,8 +3,6 @@ import time
 import math 
 import sys 
 import numpy as np
-from NatNetClient import NatNetClient
-from util import quaternion_to_euler_angle_vectorized1
 
 IP_ADDRESS = '192.168.0.205'
 
@@ -13,11 +11,23 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((IP_ADDRESS, 5000))
 print('Connected')
 
+import sys
+import time
+from NatNetClient import NatNetClient
+from util import quaternion_to_euler_angle_vectorized1
 
 positions = {}
 rotations = {}
-distanceList = []
-orientationError = []
+desiredX = []
+desiredY = []
+RegX = []
+RegY = []
+
+x_d = [-2, 0, 0, -2, -2]
+y_d = [0, 0, -2, -2, 0]
+t = 0
+
+
 
 # This is a callback function that gets connected to the NatNet client. It is called once per rigid body per frame
 def receive_rigid_body_frame(robot_id, position, rotation_quaternion):
@@ -32,48 +42,74 @@ def receive_rigid_body_frame(robot_id, position, rotation_quaternion):
 
 
 
-def funcTest(rotations,robot_id,positions):
-    # initial pos
-    x = positions[robot_id][0]
-    y = positions[robot_id][1]
-    print(f"current: ({x}, {y})")
-    print('Last position', positions[robot_id], ' rotation', rotations[robot_id])
-    # desired pos 
-    x_d = -2
-    y_d = -1
-    
-    print(f'Difference between desired and robot positions: x: {abs(x_d - x):.2f}, y: {abs(y_d - y):.2f}')
-    
-    # gain for angular and linear velocity
-    k_w = 280
-    k_v = 1700
-    
-    # orientation
-    theta = math.radians(rotations[robot_id])
-    
-    # eq for linear velocity
-    distance = math.sqrt(((x_d - x)**2) + ((y_d - y)**2))
-    print("distance: ",distance)
-    v = k_v * distance
-    print("linear velocity: ",v)
-    
-    # eq for alpha
-    alpha = (math.atan2((y_d - y), (x_d - x)))
-    print()
-    # eq for angular velocity
-    w = k_w * math.degrees(math.atan2((math.sin(alpha - theta)) , math.cos(alpha - theta)))
-    # position controller
-    u = np.array([ v - w, v + w])
-    u[u > 1500] = 1500
-    u[u < -1500] = -1500
-    distanceList.append(distance)
-    orientationError.append(w)
-    # print("position x: ", positions[robot_id][0])
-    command = 'CMD_MOTOR#%d#%d#%d#%d\n'%(u[0], u[0], u[1], u[1])
-    s.send(command.encode('utf-8'))
 
-    time.sleep(0.1)
+
+def funcTest(index):
+    global rotations,robot_id,positions,t
     
+    print("index: ", index)
+    # gain 
+    k_w = 200
+    k_v = 2000
+
+    while True:
+        x = positions[robot_id][0]
+        y = positions[robot_id][1]
+        print(f"current: ({x}, {y})")
+    
+        
+        # if((c*t) >= 0 and (c*t) <= 15):
+        #     x_d = -2 
+        #     y_d = 0
+        # elif ((c*t) >= 16 and (c*t) <= 30):
+        #     x_d = 0
+        #     y_d = 0
+        # elif ((c*t) >= 31 and (c*t) <= 45):
+        #     x_d = 0
+        #     y_d = -2
+        # elif ((c*t) >= 46 and (c*t) <= 60):
+        #     x_d = -2
+        #     y_d = -2
+        # else:
+        #     x_d = -2
+        #     y_d = 0
+        
+        
+        print("Time: ", t)
+
+        theta = math.radians(rotations[robot_id])
+
+        distance = math.sqrt(((x_d[index] - x)**2) + ((y_d[index] - y)**2))
+        print("distance: ",distance)
+        v = k_v * distance
+        # print("linear velocity: ",v)
+        
+
+        alpha = (math.atan2((y_d[index] - y), (x_d[index] - x)))
+        print()
+
+        w = k_w * math.degrees(math.atan2((math.sin(alpha - theta)) , math.cos(alpha - theta)))
+        
+        desiredX.append(x_d)
+        desiredY.append(y_d)
+        RegX.append(x)
+        RegY.append(y)
+        
+        u = np.array([ v - w, v + w])
+        u[u > 1500] = 1500
+        u[u < -1500] = -1500
+        
+        command = 'CMD_MOTOR#%d#%d#%d#%d\n'%(u[0], u[0], u[1], u[1])
+        s.send(command.encode('utf-8'))
+        t += 1 
+        time.sleep(0.1)
+        if distance < 0.35:
+            break
+    
+    
+    
+
+
 
 
 try:
@@ -96,30 +132,30 @@ try:
         try:
             while is_running:
                 if robot_id in positions:
-
+                    
                     # print('Last position', positions[robot_id], ' rotation', rotations[robot_id])
+                    for i in range(len(x_d)):
+                        funcTest(i)
+                break
 
-                    # Send control input to the motors
-                    funcTest(rotations,robot_id,positions)
-                    # funcTest()
-                    # Wait for 1 second
-                    # time.sleep(1)
-                    # last position
         except KeyboardInterrupt:
-            
             command = 'CMD_MOTOR#00#00#00#00\n'
             s.send(command.encode('utf-8'))
             s.shutdown(2)
             s.close()
+            t=0
             print("\n\n")
-            print("----------------------------------------")
+            print(f"X_D: {desiredX}")
             print("\n\n")
-            print("distance list: ", distanceList)
             print("\n\n")
-            print("----------------------------------------")
+            print(f"Y_D: {desiredY}")
             print("\n\n")
-            print("orientation error (omega): ", orientationError)
-            
+            print("\n\n")
+            print(f"REG X: {RegX}")
+            print("\n\n")
+            print("\n\n")
+            print(f"REG Y: {RegY}")
+            print("\n\n")
             sys.exit("Exiting Program!")
             
 
