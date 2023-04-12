@@ -53,12 +53,12 @@ while True:
         params = cv.SimpleBlobDetector_Params()
 
         # Change thresholds
-        params.minThreshold = 25
+        params.minThreshold = 75
         params.maxThreshold = 700
 
         # Filter by Area.
         params.filterByArea = True
-        params.minArea = 75
+        params.minArea = 300
         params.maxArea = 20000
 
         # Filter by Circularity
@@ -92,40 +92,73 @@ while True:
         font = cv.FONT_HERSHEY_SIMPLEX
         text = "Count=" + str(blobCount)
 
-        cv.putText(display, text, (5, 25), font, 1, (0, 255, 0), 2)
+        cv.putText(result, text, (5, 25), font, 1, (0, 255, 0), 2)
 
         # -------------------------
 
         if blobCount > 0:
             blob_x = keypoints[0].pt[0]
             text2 = "X="+"{:.2f}".format(blob_x)
-            cv.putText(display, text2,
+            cv.putText(result, text2,
                        (5, 50), font, 1, (0, 255, 0), 2)
 
             blob_y = keypoints[0].pt[1]
             text3 = "Y=" + "{:.2f}".format(blob_y)
-            cv.putText(display, text3,
+            cv.putText(result, text3,
                        (5, 75), font, 1, (0, 255, 0), 2)
             # Write Size of first blob
             blob_size = keypoints[0].size
             text4 = "S=" + "{:.2f}".format(blob_size)
-            cv.putText(display, text4,
+            cv.putText(result, text4,
                        (5, 100), font, 1, (0, 255, 0), 2)
-            cv.circle(display, (int(blob_x), int(blob_y)),
+            cv.circle(result, (int(blob_x), int(blob_y)),
                       int(blob_size / 2), (0, 0, 255), 5)
     # -------------------------
 
-        cv.imshow('keypoints', display)
+        cv.imshow('keypoints', result)
 
         if cv.waitKey(1) == ord('q'):
             break
     except KeyboardInterrupt:
-        #         for i in range(1):
-        #             imgName = "opencv_frame_{}.png".format(i+10)
-        #             cv.imwrite(imgName, result)
+        val = 9
+        for i in range(1):
+            imgName = "opencv_frame_{}.png".format(val)
+            cv.imwrite(imgName, result)
         exit()
 
 
+def UlinApprox(u):
+    # u vs theta
+    # y = 0.0805x + 3.1146
+    res = (0.0805 * u) + 3.1146
+    print("U approx: ", res)
+    return res
+
+
+def SbLinApprox(s):
+    # 1/sb vs dist
+    # y = 0.0025x - 0.0002
+    Sb = 1/s
+    res = (0.0025 * Sb) - 0.0002
+    print("Sb approx: ", res)
+    return res
+
+
+# 0 : sin-1 (0)
+# facing my left and right
+#
+# left side:
+# 1: sin-1(4.5/11)
+# 4: sin-1(3/11.5)
+# 6: sin-1(0.75, 5.5)
+# 8: sin-1(2/7)
+# 9: sin-1(4.25/12)
+# right side
+# 2: sin-1(4.5/8.5)
+# 3: sin-1(3/10.5)
+# 5: sin-1(1/11.75)
+# 7: sin-1 (3/5/ 11.25)
+# 10
 # When everything done, release the capture
 cap.release()
 cv.destroyAllWindows()
