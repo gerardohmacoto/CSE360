@@ -495,58 +495,6 @@ def detect_duck():
         y_d = [(path[i][1]) for i in range(len(path))]
         index = 0
 
-        # reaches the end don't stop:
-        # where index == len(xd) then set source
-        # to the same furtherest node and target to circle
-        # essentially swapping the source and target
-        # ensure that we pass it through the dsf function at the top
-
-        # command = 'CMD_MOTOR#00#00#00#00\n'
-        # s.send(command.encode('utf-8'))
-
-        # def funcTest():
-        # global rotations, robot_id, positions, index
-
-        # # print("index: ", index)
-
-        # # gain
-        # k_w = 35
-        # k_v = 1450
-
-        # x = positions[robot_id][0]
-        # y = positions[robot_id][1]
-        # print(f"current: ({x}, {y})")
-
-        # theta = math.radians(rotations[robot_id])
-
-        # distance = math.sqrt(((x_d[index] - x)**2) + ((y_d[index] - y)**2))
-        # print("distance: ", distance)
-        # v = k_v * distance
-        # # print("linear velocity: ",v)
-
-        # alpha = (math.atan2((y_d[index] - y), (x_d[index] - x)))
-        # print()
-
-        # w = k_w * \
-        #     math.degrees(math.atan2(
-        #         (math.sin(alpha - theta)), math.cos(alpha - theta)))
-
-        # u = np.array([v - w, v + w])
-        # u[u > 1500] = 1500
-        # u[u < -1500] = -1500
-        # command = 'CMD_MOTOR#%d#%d#%d#%d\n' % (u[0], u[0], u[1], u[1])
-        # s.send(command.encode('utf-8'))
-        # # t += 0.5
-        # time.sleep(0.1)
-        # if distance < 0.45 and index < len(x_d):
-        #     command = 'CMD_MOTOR#00#00#00#00\n'
-        #     index += 1
-        #     s.send(command.encode('utf-8'))
-        # if (index == len(x_d)):
-        #     command = 'CMD_MOTOR#00#00#00#00\n'
-        #     s.send(command.encode('utf-8'))
-        #     sys.exit("Program has finished!")
-
 
 try:
     if __name__ == "__main__":
